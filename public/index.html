@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>AltTalk TTS 테스트</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    textarea {
+      width: 100%;
+      font-size: 16px;
+    }
+    select, button {
+      margin-top: 10px;
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    a#download-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: #007bff;
+      text-decoration: none;
+    }
+    a#download-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h2>AltTalk TTS 테스트</h2>
+
+  <textarea id="text" rows="5" placeholder="텍스트를 입력하세요 (10~500자)"></textarea><br>
+
+  <label for="voice">Voice 선택:</label>
+  <select id="voice">
+    <option value="v_ULpLH4EoAu3jaMlqLDJx">Saki Asagiri (EN)</option>
+    <option value="v_m93eDVq2VDtR7O7S9Txd">Kazutaka Yonekura</option>
+    <option value="v_NOlDH8lKm7UYesLO40eL">Riho Shirogane</option>
+    <option value="v_Qj3NsahAo1E6LBiqJuAr">Daisuke Murasame</option>
+    <option value="v_4q339C9csbPv2hhElnC5">Rika Utagawa</option>
+    <option value="v_80lzVQillsUC68PIrPop">Eiji Tsukihara</option>
+  </select><br>
+
+  <label for="lang">Language:</label>
+  <select id="lang">
+    <option value="en">English</option>
+    <option value="ja" selected>Japanese</option>
+  </select><br>
+
+  <button onclick="speakText()">읽기</button>
+
+  <p id="status"></p>
+
+  <script>
+    function speakText() {
+      const text = document.getElementById("text").value.trim();
+      const voice = document.getElementById("voice").value;
+      const language = document.getElementById("lang").value;
+      const status = document.getElementById("status");
+
+      if (text.length < 10 || text.length > 500) {
+        alert("텍스트는 10자 이상, 500자 이하여야 합니다.");
+        return;
+      }
+
+      status.textContent = "오디오 생성 중...";
+      const oldLink = document.getElementById("download-link");
+      if (oldLink) oldLink.remove();
+
+      fetch("https://tts-proxy-server.onrender.com/tts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text, voice_id: voice, language })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("TTS 요청 실패");
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+        status.textContent = "🎧 재생 중";
+
+        // 🔽 다운로드 링크 만들기
+        const downloadLink = document.createElement("a");
+        downloadLink.href = audioUrl;
+        downloadLink.download = "tts_output.mp3";
+        downloadLink.id = "download-link";
+        downloadLink.textContent = "🔽 음성 파일 다운로드";
+        status.appendChild(document.createElement("br"));
+        status.appendChild(downloadLink);
+      })
+      .catch(error => {
+        console.error("에러:", error);
+        status.textContent = "오류 발생: " + error.message;
+      });
+    }
+  </script>
+</body>
+</html>
