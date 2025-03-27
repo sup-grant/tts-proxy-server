@@ -2,7 +2,7 @@ const express = require('express');
 const fetch = require('node-fetch'); // node-fetch v2 필요
 const cors = require('cors'); // 🔥 추가!
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // ⭐️ Render에선 이걸 써야 함!
 
 
 app.use(cors()); // 🔥 모든 요청 허용!
